@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>B TURTLE Kids｜Demo</title>
+  <style>
+    body{font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif;margin:0;background:#0b1020;color:#e8ecff;}
+    .wrap{max-width:860px;margin:0 auto;padding:20px;}
+    .card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:16px;margin:12px 0;}
+    .btn{cursor:pointer;border:1px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.08);color:#e8ecff;padding:12px 14px;border-radius:12px;font-weight:600;}
+    .btn:hover{background:rgba(255,255,255,0.14);}
+    .row{display:flex;gap:12px;flex-wrap:wrap;}
+    .tag{display:inline-block;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.14);}
+    .muted{opacity:0.85;}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="tag">B TURTLE Kids｜Screen-to-Sleep Switch</div>
+      <h1 style="margin:10px 0 6px;">網站已上線 ✅</h1>
+      <div class="muted" id="info">載入中…</div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 8px;">今日二選一</h2>
+      <div class="row">
+        <button class="btn" onclick="pick('A')">選 A（快）</button>
+        <button class="btn" onclick="pick('B')">選 B（酷）</button>
+      </div>
+      <div class="card" style="margin-top:12px;">
+        <div class="muted">你選的是：</div>
+        <h3 style="margin:6px 0;" id="pickedTitle">—</h3>
+        <div class="muted" id="pickedBody">請先選 A 或 B</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin:0 0 8px;">完成今天 → 解鎖</h2>
+      <button class="btn" onclick="unlock()">✅ 我完成今天了</button>
+      <div class="card" id="reward" style="margin-top:12px; display:none;">
+        🎉 解鎖成功：碎片 1/7（之後會換成圖片揭曉）
+      </div>
+    </div>
+  </div>
+
+<script>
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth()+1).padStart(2,'0');
+  const dd = String(today.getDate()).padStart(2,'0');
+  document.getElementById('info').textContent = `今天：${yyyy}-${mm}-${dd}（下一步我們會接 JSON，自動算 Day）`;
+
+  function pick(which){
+    const title = which === 'A' ? 'A：龜殼倒數 60 秒' : 'B：機甲充能呼吸 30 秒';
+    const body = which === 'A'
+      ? '把手機放在桌上，一起看倒數 60 秒；完成喊「龜殼啟動！」'
+      : '吸氣4拍吐氣4拍×4次；最後說「能量裝填完成！」';
+    document.getElementById('pickedTitle').textContent = title;
+    document.getElementById('pickedBody').textContent = body;
+  }
+
+  function unlock(){
+    document.getElementById('reward').style.display = 'block';
+  }
+</script>
+</body>
+</html>
