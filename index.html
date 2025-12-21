@@ -1,109 +1,65 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>B TURTLE Kids｜每日任務儀表板</title>
-  <style>
-    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans TC",Arial; max-width:760px; margin:24px auto; padding:0 16px; line-height:1.6;}
-    .card{border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin:12px 0;}
-    button{padding:10px 14px; border-radius:10px; border:1px solid #111827; background:#111827; color:#fff; cursor:pointer; margin-right:8px;}
-    button.secondary{background:#fff; color:#111827;}
-    .muted{color:#6b7280; font-size:14px;}
-    img{max-width:100%; border-radius:12px; border:1px solid #e5e7eb;}
-    .row{display:flex; gap:10px; flex-wrap:wrap;}
-  </style>
-</head>
-<body>
-  <h1>🐢 B TURTLE Kids｜每日任務儀表板</h1>
-  <p class="muted" id="status">載入中…</p>
-
-  <div class="card">
-    <div class="muted" id="todayLine"></div>
-    <h2 id="dayTitle">Day ?</h2>
-  </div>
-
-  <div class="card">
-    <h3>今日二選一</h3>
-    <div class="row">
-      <button onclick="pick('A')">選 A</button>
-      <button class="secondary" onclick="pick('B')">選 B</button>
-    </div>
-    <h4 id="pickedTitle" style="margin-top:12px;">（請先選 A 或 B）</h4>
-    <p id="pickedBody"></p>
-  </div>
-
-  <div class="card">
-    <h3>完成後解鎖獎勵</h3>
-    <button onclick="unlock()">我完成了，解鎖！</button>
-    <div id="rewardBox" style="display:none; margin-top:12px;">
-      <h4 id="rewardTitle"></h4>
-      <img id="rewardImg" alt="reward" />
-    </div>
-  </div>
-
 <script>
-  let DATA = null;
-  let TODAY = null;
+let DATA = null;
+let currentDay = null;
+let selectedWhich = null;
 
-  function ymd(d){
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth()+1).padStart(2,'0');
-    const dd = String(d.getDate()).padStart(2,'0');
-    return `${yyyy}-${mm}-${dd}`;
+function toDateOnly(d){
+  const x = new Date(d);
+  x.setHours(0,0,0,0);
+  return x;
+}
+
+async function loadData(){
+  // 讀同一個資料夾的 data.json
+  const res = await fetch('./data.json', { cache: 'no-store' });
+  if(!res.ok) throw new Error('讀取 data.json 失敗：' + res.status);
+  DATA = await res.json();
+
+  const start = toDateOnly(DATA.startDate + 'T00:00:00');
+  const today = toDateOnly(new Date());
+
+  // Day 計算：startDate 當天 = Day 1
+  const diff = Math.floor((today - start) / 86400000) + 1;
+
+  // 找到對應的 day；找不到就用第 1 天
+  currentDay = DATA.days.find(d => d.day === diff) || DATA.days[0];
+
+  // 把畫面上的文字換掉（這些 id 你等下要確認存在）
+  document.getElementById('day').textContent = `Day ${currentDay.day}`;
+  document.getElementById('info').textContent =
+    `今天：${today.toISOString().slice(0,10)}（從 ${DATA.startDate} 起算）`;
+
+  document.getElementById('btnA').textContent = currentDay.choiceA.title;
+  document.getElementById('btnB').textContent = currentDay.choiceB.title;
+
+  // 清空選擇區
+  document.getElementById('pickedTitle').textContent = '—';
+  document.getElementById('pickedBody').textContent = '請先點上面的 A 或 B。';
+  document.getElementById('reward').style.display = 'none';
+  selectedWhich = null;
+}
+
+function pick(which){
+  selectedWhich = which;
+  const item = (which === 'A') ? currentDay.choiceA : currentDay.choiceB;
+  document.getElementById('pickedTitle').textContent = item.title;
+  document.getElementById('pickedBody').textContent = item.body;
+}
+
+function unlock(){
+  if(!selectedWhich){
+    alert('請先選 A 或 B');
+    return;
   }
+  document.getElementById('rewardTitle').textContent = currentDay.reward.title;
+  document.getElementById('rewardImg').src = currentDay.reward.img;
+  document.getElementById('reward').style.display = 'block';
+}
 
-  function diffDays(a, b){
-    // a,b: Date
-    const ms = 24*60*60*1000;
-    const ua = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
-    const ub = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
-    return Math.floor((ua-ub)/ms);
-  }
-
-  function currentDayObj(){
-    const start = new Date(DATA.startDate + "T00:00:00");
-    const idx = diffDays(TODAY, start); // 0-based
-    const dayNumber = Math.max(1, Math.min(DATA.days.length, idx + 1));
-    const obj = DATA.days.find(x => x.day === dayNumber) || DATA.days[dayNumber-1];
-    return { dayNumber, obj };
-  }
-
-  function renderHeader(){
-    TODAY = new Date();
-    document.getElementById('todayLine').textContent = `今天：${ymd(TODAY)}｜資料起始日：${DATA.startDate}`;
-    const { dayNumber } = currentDayObj();
-    document.getElementById('dayTitle').textContent = `Day ${dayNumber}`;
-  }
-
-  function pick(which){
-    const { obj } = currentDayObj();
-    const choice = which === 'A' ? obj.choiceA : obj.choiceB;
-    document.getElementById('pickedTitle').textContent = choice.title;
-    document.getElementById('pickedBody').textContent = choice.body;
-  }
-
-  function unlock(){
-    const { obj } = currentDayObj();
-    document.getElementById('rewardTitle').textContent = obj.reward.title;
-    document.getElementById('rewardImg').src = obj.reward.img;
-    document.getElementById('rewardBox').style.display = 'block';
-  }
-
-  async function boot(){
-    try{
-      const res = await fetch('./data.json', { cache: 'no-store' });
-      if(!res.ok) throw new Error('讀取 data.json 失敗：' + res.status);
-      DATA = await res.json();
-      renderHeader();
-      document.getElementById('status').textContent = '✅ 載入成功';
-    }catch(e){
-      document.getElementById('status').textContent = '❌ ' + e.message;
-      console.error(e);
-    }
-  }
-
-  boot();
+window.addEventListener('DOMContentLoaded', () => {
+  loadData().catch(err => {
+    console.error(err);
+    document.getElementById('info').textContent = '載入失敗：請確認 data.json 格式是否正確';
+  });
+});
 </script>
-</body>
-</html>
