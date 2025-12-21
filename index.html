@@ -3,146 +3,107 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>B TURTLE Kids｜Play</title>
+  <title>B TURTLE Kids｜每日任務儀表板</title>
   <style>
-    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans TC",Arial; margin:0; background:#0b1020; color:#e8ecff;}
-    .wrap{max-width:860px; margin:0 auto; padding:24px;}
-    .card{background:#121a33; border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:18px; margin:14px 0; box-shadow:0 10px 30px rgba(0,0,0,.25);}
-    .row{display:flex; gap:12px; flex-wrap:wrap;}
-    .btn{flex:1; min-width:220px; padding:14px 16px; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:#1a2450; color:#fff; cursor:pointer; font-size:16px;}
-    .btn:hover{filter:brightness(1.08);}
-    .btnA{background:#2a6df6;}
-    .btnB{background:#ff4d7d;}
-    .small{opacity:.8; font-size:14px;}
-    .title{font-size:20px; font-weight:700; margin:0 0 8px;}
-    .kpi{display:flex; align-items:center; justify-content:space-between; gap:12px;}
-    .pill{padding:6px 10px; border-radius:999px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.10); font-size:13px;}
-    .hr{height:1px; background:rgba(255,255,255,.10); margin:12px 0;}
-    img{max-width:100%; border-radius:14px; border:1px solid rgba(255,255,255,.10);}
-    .hide{display:none;}
-    .err{color:#ffb3b3;}
-    .ok{color:#b7ffcf;}
+    body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans TC",Arial; max-width:760px; margin:24px auto; padding:0 16px; line-height:1.6;}
+    .card{border:1px solid #e5e7eb; border-radius:12px; padding:16px; margin:12px 0;}
+    button{padding:10px 14px; border-radius:10px; border:1px solid #111827; background:#111827; color:#fff; cursor:pointer; margin-right:8px;}
+    button.secondary{background:#fff; color:#111827;}
+    .muted{color:#6b7280; font-size:14px;}
+    img{max-width:100%; border-radius:12px; border:1px solid #e5e7eb;}
+    .row{display:flex; gap:10px; flex-wrap:wrap;}
   </style>
 </head>
-
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="kpi">
-        <div>
-          <div class="title">B TURTLE Kids｜每日任務儀表板</div>
-          <div id="info" class="small">載入中…</div>
-        </div>
-        <div class="pill" id="dayPill">Day ?</div>
-      </div>
-      <div class="hr"></div>
-      <div class="small">今天只要做一件事：在 <b>A / B</b> 中選一個，做完就解鎖碎片。</div>
-    </div>
+  <h1>🐢 B TURTLE Kids｜每日任務儀表板</h1>
+  <p class="muted" id="status">載入中…</p>
 
-    <div class="card">
-      <div class="title">二選一</div>
-      <div class="row">
-        <button class="btn btnA" id="btnA">A 載入中…</button>
-        <button class="btn btnB" id="btnB">B 載入中…</button>
-      </div>
-    </div>
+  <div class="card">
+    <div class="muted" id="todayLine"></div>
+    <h2 id="dayTitle">Day ?</h2>
+  </div>
 
-    <div class="card">
-      <div class="title" id="pickedTitle">你選了：—</div>
-      <div id="pickedBody" class="small">請先點上面的 A 或 B。</div>
-      <div class="hr"></div>
-      <button class="btn" id="unlockBtn">✅ 我完成了，解鎖碎片</button>
-      <div id="reward" class="hide" style="margin-top:14px;">
-        <div class="title" id="rewardTitle">獎勵</div>
-        <img id="rewardImg" alt="reward"/>
-      </div>
-      <div id="status" class="small" style="margin-top:10px;"></div>
+  <div class="card">
+    <h3>今日二選一</h3>
+    <div class="row">
+      <button onclick="pick('A')">選 A</button>
+      <button class="secondary" onclick="pick('B')">選 B</button>
+    </div>
+    <h4 id="pickedTitle" style="margin-top:12px;">（請先選 A 或 B）</h4>
+    <p id="pickedBody"></p>
+  </div>
+
+  <div class="card">
+    <h3>完成後解鎖獎勵</h3>
+    <button onclick="unlock()">我完成了，解鎖！</button>
+    <div id="rewardBox" style="display:none; margin-top:12px;">
+      <h4 id="rewardTitle"></h4>
+      <img id="rewardImg" alt="reward" />
     </div>
   </div>
 
 <script>
-  // 讀取 data.json → 自動算 Day → 顯示任務
   let DATA = null;
-  let TODAY_ITEM = null;
+  let TODAY = null;
 
-  function pad2(n){ return String(n).padStart(2,'0'); }
-  function ymd(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
-
-  function daysBetween(start, end){
-    // 用「中午」避免時區/夏令時間造成 +1/-1 的問題
-    const s = new Date(start + "T12:00:00");
-    const e = new Date(end  + "T12:00:00");
-    return Math.floor((e - s) / (1000*60*60*24));
+  function ymd(d){
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    return `${yyyy}-${mm}-${dd}`;
   }
 
-  function setStatus(msg, ok=false){
-    const el = document.getElementById('status');
-    el.textContent = msg;
-    el.className = "small " + (ok ? "ok" : "err");
+  function diffDays(a, b){
+    // a,b: Date
+    const ms = 24*60*60*1000;
+    const ua = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+    const ub = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.floor((ua-ub)/ms);
+  }
+
+  function currentDayObj(){
+    const start = new Date(DATA.startDate + "T00:00:00");
+    const idx = diffDays(TODAY, start); // 0-based
+    const dayNumber = Math.max(1, Math.min(DATA.days.length, idx + 1));
+    const obj = DATA.days.find(x => x.day === dayNumber) || DATA.days[dayNumber-1];
+    return { dayNumber, obj };
+  }
+
+  function renderHeader(){
+    TODAY = new Date();
+    document.getElementById('todayLine').textContent = `今天：${ymd(TODAY)}｜資料起始日：${DATA.startDate}`;
+    const { dayNumber } = currentDayObj();
+    document.getElementById('dayTitle').textContent = `Day ${dayNumber}`;
   }
 
   function pick(which){
-    if(!TODAY_ITEM) return;
-    const choice = which === 'A' ? TODAY_ITEM.choiceA : TODAY_ITEM.choiceB;
-    document.getElementById('pickedTitle').textContent = `你選了：${choice.title}`;
+    const { obj } = currentDayObj();
+    const choice = which === 'A' ? obj.choiceA : obj.choiceB;
+    document.getElementById('pickedTitle').textContent = choice.title;
     document.getElementById('pickedBody').textContent = choice.body;
-    // 解鎖區塊先收起
-    document.getElementById('reward').classList.add('hide');
-    setStatus('已選擇任務。做完後按「解鎖碎片」。', true);
   }
 
   function unlock(){
-    if(!TODAY_ITEM) return;
-    const r = TODAY_ITEM.reward;
-    document.getElementById('rewardTitle').textContent = r.title || "獎勵";
-    document.getElementById('rewardImg').src = r.img;
-    document.getElementById('reward').classList.remove('hide');
-    setStatus('解鎖成功 ✅（之後我們會把這裡改成真正的「碎片浮現動畫」）', true);
+    const { obj } = currentDayObj();
+    document.getElementById('rewardTitle').textContent = obj.reward.title;
+    document.getElementById('rewardImg').src = obj.reward.img;
+    document.getElementById('rewardBox').style.display = 'block';
   }
 
-  async function init(){
-    const today = new Date();
-    const todayStr = ymd(today);
-
-    document.getElementById('info').textContent = `今天：${todayStr}（正在從 data.json 讀取內容…）`;
-
+  async function boot(){
     try{
-      const res = await fetch('./data.json', {cache:'no-store'});
-      if(!res.ok) throw new Error('fetch 失敗：' + res.status);
+      const res = await fetch('./data.json', { cache: 'no-store' });
+      if(!res.ok) throw new Error('讀取 data.json 失敗：' + res.status);
       DATA = await res.json();
-
-      const startDate = DATA.startDate; // 例如 2025-12-21
-      const d = daysBetween(startDate, todayStr) + 1; // Day 1 起算
-      const maxDay = (DATA.days || []).length;
-
-      // 範圍保護：小於 1 → 固定 Day 1；大於 max → 固定最後一天
-      const dayNum = Math.min(Math.max(d, 1), maxDay);
-
-      document.getElementById('dayPill').textContent = `Day ${dayNum}`;
-      document.getElementById('info').textContent = `startDate：${startDate} ｜ 今天：${todayStr} ｜ 自動計算：Day ${dayNum}`;
-
-      TODAY_ITEM = (DATA.days || []).find(x => x.day === dayNum) || (DATA.days || [])[0];
-      if(!TODAY_ITEM) throw new Error('data.json 裡沒有 days 內容');
-
-      // 填按鈕文字
-      document.getElementById('btnA').textContent = TODAY_ITEM.choiceA.title;
-      document.getElementById('btnB').textContent = TODAY_ITEM.choiceB.title;
-
-      setStatus('載入成功 ✅ 請選 A 或 B。', true);
-
+      renderHeader();
+      document.getElementById('status').textContent = '✅ 載入成功';
     }catch(e){
+      document.getElementById('status').textContent = '❌ ' + e.message;
       console.error(e);
-      setStatus('載入失敗：請確認 data.json 是否在同一層（repo root），且 JSON 格式正確。');
-      document.getElementById('btnA').textContent = 'A（載入失敗）';
-      document.getElementById('btnB').textContent = 'B（載入失敗）';
     }
   }
 
-  document.getElementById('btnA').addEventListener('click', () => pick('A'));
-  document.getElementById('btnB').addEventListener('click', () => pick('B'));
-  document.getElementById('unlockBtn').addEventListener('click', unlock);
-
-  init();
+  boot();
 </script>
 </body>
 </html>
