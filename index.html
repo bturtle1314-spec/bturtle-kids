@@ -1,65 +1,158 @@
-<script>
-let DATA = null;
-let currentDay = null;
-let selectedWhich = null;
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>B TURTLE Kids｜Screen-to-Sleep Switch</title>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans TC", sans-serif; margin: 0; background:#0b1220; color:#e9eefc; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 24px; }
+    .card { background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); border-radius: 18px; padding: 18px; }
+    h1 { margin: 0 0 6px; font-size: 22px; }
+    .muted { opacity:.75; font-size: 14px; }
+    .row { display:flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+    .btn {
+      flex: 1 1 260px;
+      background: rgba(255,255,255,0.10);
+      border:1px solid rgba(255,255,255,0.18);
+      color:#e9eefc;
+      border-radius: 16px;
+      padding: 14px;
+      cursor:pointer;
+      text-align:left;
+      transition: transform .05s ease;
+    }
+    .btn:active { transform: scale(0.99); }
+    .btn h3 { margin:0 0 8px; font-size: 16px; }
+    .btn p { margin:0; opacity:.85; line-height: 1.45; }
+    .pill { display:inline-block; padding: 6px 10px; border-radius: 999px; background: rgba(99,102,241,.20); border:1px solid rgba(99,102,241,.35); font-size: 13px; }
+    .reward { margin-top: 14px; display:none; }
+    .reward img { width: 100%; max-width: 560px; border-radius: 16px; border:1px solid rgba(255,255,255,0.12); }
+    .footer { margin-top: 18px; font-size: 13px; opacity:.7; }
+    .error { color: #ffb4b4; }
+  </style>
+</head>
 
-function toDateOnly(d){
-  const x = new Date(d);
-  x.setHours(0,0,0,0);
-  return x;
-}
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="pill" id="dayPill">Day -</div>
+      <h1>Screen-to-Sleep Switch</h1>
+      <div class="muted" id="dateText">載入中…</div>
 
-async function loadData(){
-  // 讀同一個資料夾的 data.json
-  const res = await fetch('./data.json', { cache: 'no-store' });
-  if(!res.ok) throw new Error('讀取 data.json 失敗：' + res.status);
-  DATA = await res.json();
+      <div class="row" id="choicesRow" style="margin-top:16px;">
+        <button class="btn" id="btnA">
+          <h3 id="aTitle">A：</h3>
+          <p id="aBody"></p>
+        </button>
+        <button class="btn" id="btnB">
+          <h3 id="bTitle">B：</h3>
+          <p id="bBody"></p>
+        </button>
+      </div>
 
-  const start = toDateOnly(DATA.startDate + 'T00:00:00');
-  const today = toDateOnly(new Date());
+      <div class="reward" id="rewardBox">
+        <div class="pill" style="margin-bottom:10px;" id="rewardTitle">解鎖獎勵</div>
+        <div class="muted" style="margin-bottom:10px;">你已完成今天的「收手機轉場」✅</div>
+        <img id="rewardImg" alt="reward" />
+      </div>
 
-  // Day 計算：startDate 當天 = Day 1
-  const diff = Math.floor((today - start) / 86400000) + 1;
+      <div class="footer" id="hint">
+        小提醒：如果你更新了 data.json 但看不到變化，請用 <b>Ctrl+F5</b> 強制刷新。
+      </div>
+      <div class="footer error" id="err"></div>
+    </div>
+  </div>
 
-  // 找到對應的 day；找不到就用第 1 天
-  currentDay = DATA.days.find(d => d.day === diff) || DATA.days[0];
+  <script>
+    const errEl = document.getElementById("err");
 
-  // 把畫面上的文字換掉（這些 id 你等下要確認存在）
-  document.getElementById('day').textContent = `Day ${currentDay.day}`;
-  document.getElementById('info').textContent =
-    `今天：${today.toISOString().slice(0,10)}（從 ${DATA.startDate} 起算）`;
+    function toLocalDateOnly(d) {
+      // 只保留年月日，避免時區造成 day 差異
+      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    }
 
-  document.getElementById('btnA').textContent = currentDay.choiceA.title;
-  document.getElementById('btnB').textContent = currentDay.choiceB.title;
+    function daysBetween(a, b) {
+      const ms = 24 * 60 * 60 * 1000;
+      return Math.round((toLocalDateOnly(b) - toLocalDateOnly(a)) / ms);
+    }
 
-  // 清空選擇區
-  document.getElementById('pickedTitle').textContent = '—';
-  document.getElementById('pickedBody').textContent = '請先點上面的 A 或 B。';
-  document.getElementById('reward').style.display = 'none';
-  selectedWhich = null;
-}
+    async function loadData() {
+      // 用相對路徑，適用 /bturtle-kids/
+      const url = "./data.json?ts=" + Date.now();
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("讀取 data.json 失敗：" + res.status);
+      return await res.json();
+    }
 
-function pick(which){
-  selectedWhich = which;
-  const item = (which === 'A') ? currentDay.choiceA : currentDay.choiceB;
-  document.getElementById('pickedTitle').textContent = item.title;
-  document.getElementById('pickedBody').textContent = item.body;
-}
+    function getTodayKey(startDateStr) {
+      const start = new Date(startDateStr);
+      const today = new Date();
+      const diff = daysBetween(start, today);
+      // Day 1 = startDate 當天
+      return Math.max(1, diff + 1);
+    }
 
-function unlock(){
-  if(!selectedWhich){
-    alert('請先選 A 或 B');
-    return;
-  }
-  document.getElementById('rewardTitle').textContent = currentDay.reward.title;
-  document.getElementById('rewardImg').src = currentDay.reward.img;
-  document.getElementById('reward').style.display = 'block';
-}
+    function storageKey(dayNum) {
+      return "bturtle_done_day_" + dayNum;
+    }
 
-window.addEventListener('DOMContentLoaded', () => {
-  loadData().catch(err => {
-    console.error(err);
-    document.getElementById('info').textContent = '載入失敗：請確認 data.json 格式是否正確';
-  });
-});
-</script>
+    function renderDay(data) {
+      const dayNum = getTodayKey(data.startDate);
+      document.getElementById("dayPill").textContent = "Day " + dayNum;
+      document.getElementById("dateText").textContent = "StartDate: " + data.startDate + "｜今天： " + new Date().toLocaleDateString("zh-Hant");
+
+      const dayObj = (data.days || []).find(d => Number(d.day) === Number(dayNum));
+      if (!dayObj) {
+        document.getElementById("choicesRow").style.display = "none";
+        document.getElementById("rewardBox").style.display = "none";
+        errEl.textContent = "找不到 Day " + dayNum + " 的資料。請確認 data.json 的 days 內有對應 day。";
+        return;
+      }
+
+      // 已完成就直接顯示 reward
+      const done = localStorage.getItem(storageKey(dayNum));
+      if (done === "A" || done === "B") {
+        showReward(dayObj, done);
+        return;
+      }
+
+      // 顯示選項
+      document.getElementById("choicesRow").style.display = "flex";
+      document.getElementById("rewardBox").style.display = "none";
+
+      document.getElementById("aTitle").textContent = dayObj.choiceA?.title || "A";
+      document.getElementById("aBody").textContent  = dayObj.choiceA?.body  || "";
+
+      document.getElementById("bTitle").textContent = dayObj.choiceB?.title || "B";
+      document.getElementById("bBody").textContent  = dayObj.choiceB?.body  || "";
+
+      document.getElementById("btnA").onclick = () => {
+        localStorage.setItem(storageKey(dayNum), "A");
+        showReward(dayObj, "A");
+      };
+      document.getElementById("btnB").onclick = () => {
+        localStorage.setItem(storageKey(dayNum), "B");
+        showReward(dayObj, "B");
+      };
+    }
+
+    function showReward(dayObj, choice) {
+      document.getElementById("choicesRow").style.display = "none";
+      const reward = dayObj.reward || {};
+      document.getElementById("rewardTitle").textContent = reward.title ? reward.title : ("已完成（選了 " + choice + "）");
+      document.getElementById("rewardImg").src = reward.img ? reward.img : "https://placehold.co/800x450?text=Reward";
+      document.getElementById("rewardBox").style.display = "block";
+    }
+
+    (async () => {
+      try {
+        const data = await loadData();
+        renderDay(data);
+      } catch (e) {
+        errEl.textContent = String(e);
+      }
+    })();
+  </script>
+</body>
+</html>
