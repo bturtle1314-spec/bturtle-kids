@@ -1,109 +1,110 @@
 {
+  "mode": "rolling",
   "startDate": "2025-12-23",
   "days": [
     {
       "day": 1,
       "choiceA": {
         "title": "A：龜殼倒數 60 秒",
-        "body": "把手機放在桌上，一起看倒數 60 秒；完成喊「龜殼啟動！」"
+        "body": "把手機放在桌上，一起看倒數 60 秒；倒數到 0 一起喊「龜殼啟動！」"
       },
       "choiceB": {
         "title": "B：機甲充能呼吸 30 秒",
-        "body": "吸氣4拍吐氣4拍×4次；最後說「能量裝填完成！」"
+        "body": "吸氣4拍、吐氣4拍 × 4 次；最後說「能量裝填完成！」"
       },
       "reward": {
-        "title": "解鎖碎片 #1",
-        "img": "https://placehold.co/800x450?text=Reward+1"
+        "title": "解鎖碎片 #1（核心亮起）",
+        "img": "https://placehold.co/800x450?text=Reward+Day+1"
       }
     },
     {
       "day": 2,
       "choiceA": {
-        "title": "A：龜殼靜音 90 秒",
-        "body": "手機面朝下放好；90 秒不碰它；結束說「安靜模式成功」"
+        "title": "A：龜殼收納 90 秒",
+        "body": "把手機放進固定位置（盒子/抽屜）；計時 90 秒完成「收納任務」。"
       },
       "choiceB": {
-        "title": "B：肩頸放鬆 45 秒",
-        "body": "肩膀上提→放下×6次；最後說「壓力卸載完成！」"
+        "title": "B：機甲裝甲伸展 60 秒",
+        "body": "肩膀繞圈 10 次＋手臂伸展 20 秒＋脖子左右各 10 秒。"
       },
       "reward": {
-        "title": "解鎖碎片 #2",
-        "img": "https://placehold.co/800x450?text=Reward+2"
+        "title": "解鎖碎片 #2（裝甲上線）",
+        "img": "https://placehold.co/800x450?text=Reward+Day+2"
       }
     },
     {
       "day": 3,
       "choiceA": {
-        "title": "A：龜殼收納 30 秒",
-        "body": "把手機放進固定位置；關燈前說「龜殼收納完成！」"
+        "title": "A：龜殼靜音咒 30 秒",
+        "body": "把聲音調小，對手機說：「晚安，明天再見。」然後放回固定位置。"
       },
       "choiceB": {
-        "title": "B：星球倒數 60 秒",
-        "body": "看著牆上/天花板，慢慢倒數 60；最後說「降落成功」"
+        "title": "B：機甲任務確認 45 秒",
+        "body": "說出今晚 1 件小任務（洗臉/換睡衣/喝水），完成後回報：「任務完成！」"
       },
       "reward": {
-        "title": "解鎖碎片 #3",
-        "img": "https://placehold.co/800x450?text=Reward+3"
+        "title": "解鎖碎片 #3（能源管線）",
+        "img": "https://placehold.co/800x450?text=Reward+Day+3"
       }
     },
     {
       "day": 4,
       "choiceA": {
-        "title": "A：龜殼伸展 40 秒",
-        "body": "雙手往上伸→停 5 秒；左右側伸各 10 秒；最後說「殼體校正完成」"
+        "title": "A：龜殼夜航水杯 60 秒",
+        "body": "喝三口水 → 輕拍胸口兩下 → 說「夜航開始」。"
       },
       "choiceB": {
-        "title": "B：慢呼吸 1 分鐘",
-        "body": "吸氣 4 拍、吐氣 6 拍×5 次；最後說「睡意充能」"
+        "title": "B：機甲低速走路 2 分鐘",
+        "body": "在房間慢慢走 2 分鐘，步伐像「靜音機甲」一樣輕，走完回到床邊。"
       },
       "reward": {
-        "title": "解鎖碎片 #4",
-        "img": "https://placehold.co/800x450?text=Reward+4"
+        "title": "解鎖碎片 #4（腿部模組）",
+        "img": "https://placehold.co/800x450?text=Reward+Day+4"
       }
     },
     {
       "day": 5,
       "choiceA": {
-        "title": "A：龜殼小整理 2 分鐘",
-        "body": "桌面清掉 3 樣東西；最後說「基地清爽完成！」"
+        "title": "A：龜殼指令卡 20 秒",
+        "body": "把手放胸口，說：「我做得到。現在切換睡眠模式。」"
       },
       "choiceB": {
-        "title": "B：感謝一句話 30 秒",
-        "body": "對自己/家人說一句感謝；最後說「好心情啟動」"
+        "title": "B：機甲護盾抱抱 30 秒",
+        "body": "抱枕抱緊 30 秒（像機甲開護盾），然後放鬆肩膀。"
       },
       "reward": {
-        "title": "解鎖碎片 #5",
-        "img": "https://placehold.co/800x450?text=Reward+5"
+        "title": "解鎖碎片 #5（護盾核心）",
+        "img": "https://placehold.co/800x450?text=Reward+Day+5"
       }
     },
     {
       "day": 6,
       "choiceA": {
-        "title": "A：龜殼護眼 45 秒",
-        "body": "閉眼 10 秒→輕眨眼 10 次→看遠方 20 秒；最後說「護眼完成」"
+        "title": "A：龜殼燈光降落 60 秒",
+        "body": "把燈光調暗一階（或關掉一盞燈），說：「進入夜間基地。」"
       },
       "choiceB": {
-        "title": "B：抱抱儀式 20 秒",
-        "body": "和家長抱一下或擊掌一下；最後說「連結成功！」"
+        "title": "B：機甲掃描放鬆 45 秒",
+        "body": "從頭到腳快速掃描：眉頭放鬆→嘴角放鬆→肩膀放鬆→手放鬆。"
       },
       "reward": {
-        "title": "解鎖碎片 #6",
-        "img": "https://placehold.co/800x450?text=Reward+6"
+        "title": "解鎖碎片 #6（頭盔輪廓）",
+        "img": "https://placehold.co/800x450?text=Reward+Day+6"
       }
     },
     {
       "day": 7,
       "choiceA": {
-        "title": "A：龜殼總結 60 秒",
-        "body": "回想這週最棒的一天；說出原因；最後說「我做到了！」"
+        "title": "A：龜殼勝利宣告 20 秒",
+        "body": "說：「我完成 7 天挑戰！」然後比一個勝利手勢（拳頭/讚）。"
       },
       "choiceB": {
-        "title": "B：明天一個小目標 30 秒",
-        "body": "說出明天想做的一件小事；最後說「任務設定完成」"
+        "title": "B：機甲終章充能 60 秒",
+        "body": "深呼吸 3 次，每次吐氣都想像機甲亮一格；最後說：「完成！」"
       },
       "reward": {
-        "title": "解鎖碎片 #7",
-        "img": "https://placehold.co/800x450?text=Reward+7"
+        "title": "解鎖碎片 #7（第一週完成徽章）",
+        "img": "https://placehold.co/800x450?text=Reward+Day+7"
       }
     }
   ]
