@@ -1,203 +1,110 @@
-<!doctype html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>B TURTLE Kids｜Screen-to-Sleep Switch</title>
-  <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans TC", sans-serif; margin: 0; background:#0b1220; color:#e9eefc; }
-    .wrap { max-width: 900px; margin: 0 auto; padding: 24px; }
-    .card { background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); border-radius: 18px; padding: 18px; }
-    h1 { margin: 0 0 6px; font-size: 24px; letter-spacing:.2px; }
-    .muted { opacity:.78; font-size: 14px; line-height: 1.6; }
-    .pill { display:inline-block; padding: 6px 10px; border-radius: 999px; background: rgba(99,102,241,.20); border:1px solid rgba(99,102,241,.35); font-size: 13px; }
-    .row { display:flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
-    .btn {
-      flex: 1 1 260px;
-      background: rgba(255,255,255,0.10);
-      border:1px solid rgba(255,255,255,0.18);
-      color:#e9eefc;
-      border-radius: 16px;
-      padding: 14px;
-      cursor:pointer;
-      text-align:left;
-      transition: transform .05s ease, background .15s ease;
-    }
-    .btn:hover { background: rgba(255,255,255,0.13); }
-    .btn:active { transform: scale(0.99); }
-    .btn h3 { margin:0 0 8px; font-size: 16px; }
-    .btn p { margin:0; opacity:.85; line-height: 1.45; }
-    .reward { margin-top: 14px; display:none; }
-    .reward img { width: 100%; max-width: 560px; border-radius: 16px; border:1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04); }
-    .footer { margin-top: 14px; font-size: 13px; opacity:.78; line-height: 1.6; }
-    .error { color: #ffb4b4; opacity: 1; }
-    .topbar { display:flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
-    .ghostBtn{
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.18);
-      color:#e9eefc;
-      border-radius: 12px;
-      padding: 10px 12px;
-      cursor:pointer;
-      font-size: 13px;
-      opacity: .9;
-    }
-    .ghostBtn:hover{ background: rgba(255,255,255,0.06); }
-    .divider{ height:1px; background: rgba(255,255,255,0.10); margin: 14px 0; }
-  </style>
-</head>
-
-<body>
-  <div class="wrap">
-    <div class="card">
-      <div class="topbar">
-        <div class="pill" id="dayPill">Day -</div>
-        <button class="ghostBtn" id="resetTodayBtn" title="只重置今天，不影響其他天">重新開始今天</button>
-      </div>
-
-      <h1>Screen-to-Sleep Switch</h1>
-
-      <div class="muted" id="dateText">載入中…</div>
-
-      <div class="divider"></div>
-
-      <div class="muted" id="howto">
-        使用方式：每天選 <b>A</b> 或 <b>B</b> 做一次「收手機轉場」。<br/>
-        ✅ 完成後會自動記住（不用登入、也不用開無痕）。<br/>
-        想重選今天的 A/B？按右上角 <b>重新開始今天</b>。
-      </div>
-
-      <div class="row" id="choicesRow" style="margin-top:16px;">
-        <button class="btn" id="btnA">
-          <h3 id="aTitle">A：</h3>
-          <p id="aBody"></p>
-        </button>
-        <button class="btn" id="btnB">
-          <h3 id="bTitle">B：</h3>
-          <p id="bBody"></p>
-        </button>
-      </div>
-
-      <div class="reward" id="rewardBox">
-        <div class="pill" style="margin-bottom:10px;" id="rewardTitle">解鎖獎勵</div>
-        <div class="muted" style="margin-bottom:10px;" id="rewardMsg">你已完成今天 ✅</div>
-        <img id="rewardImg" alt="reward" />
-      </div>
-
-      <div class="footer" id="hint">
-        若你更新 data.json 但畫面沒變：請按 <b>Ctrl+F5</b> 強制刷新（手機可長按重新整理）。
-      </div>
-
-      <div class="footer error" id="err"></div>
-    </div>
-  </div>
-
-  <script>
-    const errEl = document.getElementById("err");
-
-    function toLocalDateOnly(d) {
-      return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-    }
-
-    function daysBetween(a, b) {
-      const ms = 24 * 60 * 60 * 1000;
-      return Math.round((toLocalDateOnly(b) - toLocalDateOnly(a)) / ms);
-    }
-
-    async function loadData() {
-      // 避免快取：加 ts
-      const url = "./data.json?ts=" + Date.now();
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error("讀取 data.json 失敗（HTTP " + res.status + "）");
-      return await res.json();
-    }
-
-    function getTodayKey(startDateStr) {
-      const start = new Date(startDateStr);
-      if (isNaN(start.getTime())) throw new Error("startDate 格式錯誤，必須像 2025-12-23 這樣");
-      const today = new Date();
-      const diff = daysBetween(start, today);
-      return Math.max(1, diff + 1); // Day 1 = startDate 當天
-    }
-
-    function storageKey(dayNum) {
-      return "bturtle_done_day_" + dayNum;
-    }
-
-    function renderDay(data) {
-      const dayNum = getTodayKey(data.startDate);
-
-      document.getElementById("dayPill").textContent = "Day " + dayNum;
-      document.getElementById("dateText").textContent =
-        "StartDate: " + data.startDate + " ｜ 今天：" + new Date().toLocaleDateString("zh-Hant");
-
-      // 只重置今天
-      document.getElementById("resetTodayBtn").onclick = () => {
-        localStorage.removeItem(storageKey(dayNum));
-        // 重新渲染
-        renderDay(data);
-      };
-
-      const dayObj = (data.days || []).find(d => Number(d.day) === Number(dayNum));
-      if (!dayObj) {
-        document.getElementById("choicesRow").style.display = "none";
-        document.getElementById("rewardBox").style.display = "none";
-        errEl.textContent = "今天是 Day " + dayNum + "，但 data.json 裡找不到對應資料。請在 days 裡加入 day: " + dayNum + " 的內容。";
-        return;
+{
+  "startDate": "2025-12-23",
+  "days": [
+    {
+      "day": 1,
+      "choiceA": {
+        "title": "A：龜殼倒數 60 秒",
+        "body": "把手機放在桌上，一起看倒數 60 秒；完成喊「龜殼啟動！」"
+      },
+      "choiceB": {
+        "title": "B：機甲充能呼吸 30 秒",
+        "body": "吸氣4拍吐氣4拍×4次；最後說「能量裝填完成！」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #1",
+        "img": "https://placehold.co/800x450?text=Reward+1"
       }
-
-      errEl.textContent = "";
-
-      const done = localStorage.getItem(storageKey(dayNum));
-      if (done === "A" || done === "B") {
-        showReward(dayObj, done);
-        return;
+    },
+    {
+      "day": 2,
+      "choiceA": {
+        "title": "A：龜殼靜音 90 秒",
+        "body": "手機面朝下放好；90 秒不碰它；結束說「安靜模式成功」"
+      },
+      "choiceB": {
+        "title": "B：肩頸放鬆 45 秒",
+        "body": "肩膀上提→放下×6次；最後說「壓力卸載完成！」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #2",
+        "img": "https://placehold.co/800x450?text=Reward+2"
       }
-
-      // 顯示選項
-      document.getElementById("choicesRow").style.display = "flex";
-      document.getElementById("rewardBox").style.display = "none";
-
-      document.getElementById("aTitle").textContent = dayObj.choiceA?.title || "A";
-      document.getElementById("aBody").textContent  = dayObj.choiceA?.body  || "";
-
-      document.getElementById("bTitle").textContent = dayObj.choiceB?.title || "B";
-      document.getElementById("bBody").textContent  = dayObj.choiceB?.body  || "";
-
-      document.getElementById("btnA").onclick = () => {
-        localStorage.setItem(storageKey(dayNum), "A");
-        showReward(dayObj, "A");
-      };
-      document.getElementById("btnB").onclick = () => {
-        localStorage.setItem(storageKey(dayNum), "B");
-        showReward(dayObj, "B");
-      };
-    }
-
-    function showReward(dayObj, choice) {
-      document.getElementById("choicesRow").style.display = "none";
-
-      const reward = dayObj.reward || {};
-      document.getElementById("rewardTitle").textContent =
-        reward.title ? reward.title : ("已完成（選了 " + choice + "）");
-
-      document.getElementById("rewardMsg").textContent =
-        "你已完成今天（選了 " + choice + "）✅";
-
-      document.getElementById("rewardImg").src =
-        reward.img ? reward.img : "https://placehold.co/800x450?text=Reward";
-
-      document.getElementById("rewardBox").style.display = "block";
-    }
-
-    (async () => {
-      try {
-        const data = await loadData();
-        renderDay(data);
-      } catch (e) {
-        errEl.textContent = "載入失敗： " + String(e) + "（你可以稍後重新整理）";
+    },
+    {
+      "day": 3,
+      "choiceA": {
+        "title": "A：龜殼收納 30 秒",
+        "body": "把手機放進固定位置；關燈前說「龜殼收納完成！」"
+      },
+      "choiceB": {
+        "title": "B：星球倒數 60 秒",
+        "body": "看著牆上/天花板，慢慢倒數 60；最後說「降落成功」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #3",
+        "img": "https://placehold.co/800x450?text=Reward+3"
       }
-    })();
-  </script>
-</body>
-</html>
+    },
+    {
+      "day": 4,
+      "choiceA": {
+        "title": "A：龜殼伸展 40 秒",
+        "body": "雙手往上伸→停 5 秒；左右側伸各 10 秒；最後說「殼體校正完成」"
+      },
+      "choiceB": {
+        "title": "B：慢呼吸 1 分鐘",
+        "body": "吸氣 4 拍、吐氣 6 拍×5 次；最後說「睡意充能」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #4",
+        "img": "https://placehold.co/800x450?text=Reward+4"
+      }
+    },
+    {
+      "day": 5,
+      "choiceA": {
+        "title": "A：龜殼小整理 2 分鐘",
+        "body": "桌面清掉 3 樣東西；最後說「基地清爽完成！」"
+      },
+      "choiceB": {
+        "title": "B：感謝一句話 30 秒",
+        "body": "對自己/家人說一句感謝；最後說「好心情啟動」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #5",
+        "img": "https://placehold.co/800x450?text=Reward+5"
+      }
+    },
+    {
+      "day": 6,
+      "choiceA": {
+        "title": "A：龜殼護眼 45 秒",
+        "body": "閉眼 10 秒→輕眨眼 10 次→看遠方 20 秒；最後說「護眼完成」"
+      },
+      "choiceB": {
+        "title": "B：抱抱儀式 20 秒",
+        "body": "和家長抱一下或擊掌一下；最後說「連結成功！」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #6",
+        "img": "https://placehold.co/800x450?text=Reward+6"
+      }
+    },
+    {
+      "day": 7,
+      "choiceA": {
+        "title": "A：龜殼總結 60 秒",
+        "body": "回想這週最棒的一天；說出原因；最後說「我做到了！」"
+      },
+      "choiceB": {
+        "title": "B：明天一個小目標 30 秒",
+        "body": "說出明天想做的一件小事；最後說「任務設定完成」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #7",
+        "img": "https://placehold.co/800x450?text=Reward+7"
+      }
+    }
+  ]
+}
