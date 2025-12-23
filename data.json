@@ -15,7 +15,96 @@
         "title": "解鎖碎片 #1",
         "img": "https://placehold.co/800x450?text=Reward+1"
       }
+    },
+    {
+      "day": 2,
+      "choiceA": {
+        "title": "A：龜殼停機 10 秒",
+        "body": "手機螢幕朝下，雙手放胸口，數 10 秒；完成說「今晚交給龜殼守護。」"
+      },
+      "choiceB": {
+        "title": "B：1 分鐘收機倒帶",
+        "body": "把手機放到固定位置，回想今天最棒的一件事；完成說「收機完成，晚安模式啟動。」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #2",
+        "img": "https://placehold.co/800x450?text=Reward+2"
+      }
+    },
+    {
+      "day": 3,
+      "choiceA": {
+        "title": "A：龜步慢走 60 秒",
+        "body": "離開螢幕，慢慢走動 60 秒（像烏龜一樣慢）；完成說「我比焦慮慢。」"
+      },
+      "choiceB": {
+        "title": "B：機甲回收桌面 30 秒",
+        "body": "把桌面/床邊收一個小角落 30 秒；完成說「基地整潔，睡意上線。」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #3",
+        "img": "https://placehold.co/800x450?text=Reward+3"
+      }
+    },
+    {
+      "day": 4,
+      "choiceA": {
+        "title": "A：龜殼鎖定模式",
+        "body": "手機放到固定位置，轉成靜音/勿擾；完成說「龜殼上鎖，怪獸退散。」"
+      },
+      "choiceB": {
+        "title": "B：機甲眼睛休眠 20 秒",
+        "body": "閉眼 20 秒，放鬆眉毛與肩膀；完成說「視覺關機。」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #4",
+        "img": "https://placehold.co/800x450?text=Reward+4"
+      }
+    },
+    {
+      "day": 5,
+      "choiceA": {
+        "title": "A：龜殼護盾三句話",
+        "body": "小聲說三句：1)我很安全 2)我做得很好 3)我可以休息；完成說「護盾展開。」"
+      },
+      "choiceB": {
+        "title": "B：機甲能量補給 1 口水",
+        "body": "喝一小口水，慢慢吞下；完成說「能量補給完成。」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #5",
+        "img": "https://placehold.co/800x450?text=Reward+5"
+      }
+    },
+    {
+      "day": 6,
+      "choiceA": {
+        "title": "A：龜殼感謝掃描 15 秒",
+        "body": "想一個今天值得感謝的人/事/自己；完成說「我收下今天。」"
+      },
+      "choiceB": {
+        "title": "B：機甲關機手勢",
+        "body": "把手機放下後，雙手在胸前做「關機按一下」的手勢；完成說「關機。」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #6",
+        "img": "https://placehold.co/800x450?text=Reward+6"
+      }
+    },
+    {
+      "day": 7,
+      "choiceA": {
+        "title": "A：龜殼終章儀式 60 秒",
+        "body": "把手機放好，對自己點頭 1 次；完成說「第七天，我做到了。」"
+      },
+      "choiceB": {
+        "title": "B：機甲完工回報",
+        "body": "輕拍枕頭 2 下，像在宣告任務完成；完成說「任務完成，進入睡眠航行。」"
+      },
+      "reward": {
+        "title": "解鎖碎片 #7",
+        "img": "https://placehold.co/800x450?text=Reward+7"
+      }
     }
   ]
 }
-
