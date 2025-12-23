@@ -6,10 +6,11 @@
   <title>B TURTLE Kids｜Screen-to-Sleep Switch</title>
   <style>
     body { font-family: system-ui, -apple-system, "Segoe UI", Arial, "Noto Sans TC", sans-serif; margin: 0; background:#0b1220; color:#e9eefc; }
-    .wrap { max-width: 900px; margin: 0 auto; padding: 24px; }
+    .wrap { max-width: 920px; margin: 0 auto; padding: 22px; }
     .card { background: rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.10); border-radius: 18px; padding: 18px; }
-    h1 { margin: 0 0 6px; font-size: 22px; }
-    .muted { opacity:.75; font-size: 14px; }
+    h1 { margin: 6px 0 6px; font-size: 22px; }
+    .muted { opacity:.78; font-size: 14px; line-height: 1.5; }
+    .pill { display:inline-block; padding: 6px 10px; border-radius: 999px; background: rgba(99,102,241,.20); border:1px solid rgba(99,102,241,.35); font-size: 13px; }
     .row { display:flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
     .btn {
       flex: 1 1 260px;
@@ -20,19 +21,29 @@
       padding: 14px;
       cursor:pointer;
       text-align:left;
-      transition: transform .05s ease;
+      transition: transform .05s ease, border-color .12s ease;
     }
+    .btn:hover { border-color: rgba(99,102,241,.55); }
     .btn:active { transform: scale(0.99); }
     .btn h3 { margin:0 0 8px; font-size: 16px; }
-    .btn p { margin:0; opacity:.85; line-height: 1.45; }
-    .pill { display:inline-block; padding: 6px 10px; border-radius: 999px; background: rgba(99,102,241,.20); border:1px solid rgba(99,102,241,.35); font-size: 13px; }
+    .btn p { margin:0; opacity:.88; line-height: 1.45; }
     .reward { margin-top: 14px; display:none; }
-    .reward img { width: 100%; max-width: 560px; border-radius: 16px; border:1px solid rgba(255,255,255,0.12); }
-    .footer { margin-top: 18px; font-size: 13px; opacity:.7; line-height: 1.5; }
-    .error { color: #ffb4b4; }
-    .ok { color: #c3ffce; }
-    .small { font-size:12px; opacity:.75; }
-    code { background: rgba(255,255,255,0.08); padding:2px 6px; border-radius: 8px; }
+    .reward img { width: 100%; max-width: 560px; border-radius: 16px; border:1px solid rgba(255,255,255,0.12); display:block; }
+    .footer { margin-top: 14px; font-size: 13px; opacity:.72; line-height: 1.5; }
+    .error { color: #ffb4b4; opacity: 1; }
+    .mini { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top: 10px; }
+    .linkbtn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.18);
+      color:#e9eefc;
+      border-radius: 999px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 13px;
+      opacity: .9;
+    }
+    .linkbtn:hover { border-color: rgba(99,102,241,.55); }
+    .ok { color: #b7ffd3; }
   </style>
 </head>
 
@@ -42,6 +53,11 @@
       <div class="pill" id="dayPill">Day -</div>
       <h1>Screen-to-Sleep Switch</h1>
       <div class="muted" id="dateText">載入中…</div>
+
+      <div class="mini">
+        <button class="linkbtn" id="resetBtn" title="只會重置這台裝置的進度（不會影響別人）">重置這台裝置的進度</button>
+        <span class="muted" id="statusText"></span>
+      </div>
 
       <div class="row" id="choicesRow" style="margin-top:16px;">
         <button class="btn" id="btnA">
@@ -56,24 +72,29 @@
 
       <div class="reward" id="rewardBox">
         <div class="pill" style="margin-bottom:10px;" id="rewardTitle">解鎖獎勵</div>
-        <div class="muted" style="margin-bottom:10px;">你已完成今天的「收手機轉場」✅</div>
+        <div class="muted" style="margin-bottom:10px;">今天已完成 ✅（可直接關掉，明天再打開就會自動到下一天）</div>
         <img id="rewardImg" alt="reward" />
+        <div class="footer ok" id="doneHint"></div>
       </div>
 
       <div class="footer" id="hint">
-        <div class="ok">✅ 家長使用方式：每天打開同一個網址即可。</div>
-        <div class="small">完成記錄會存在「這台裝置的這個瀏覽器」裡；若換手機/清除瀏覽資料，會重新開始（這是瀏覽器正常行為）。</div>
-        <div class="small">如果你更新了 <code>data.json</code> 但看不到變化：請按 <b>Ctrl+F5</b> 強制刷新。</div>
+        小提醒：你更新了檔案但看不到變化 → 用 <b>Ctrl+F5</b> 強制刷新（手機可「關掉分頁再重開」）。
       </div>
 
       <div class="footer error" id="err"></div>
-      <div class="footer small" id="debug"></div>
     </div>
   </div>
 
   <script>
+    // ===== 你不用懂：這版做了 3 件關鍵事 =====
+    // 1) 每個家長「第一次打開」會被記錄為 Day1（存在 localStorage）
+    // 2) 之後都用他自己的起跑日計算 Day2/Day3...（不會跳天）
+    // 3) data.json 永遠用相對路徑讀取，並加 ts 防快取
+
     const errEl = document.getElementById("err");
-    const debugEl = document.getElementById("debug");
+    const statusText = document.getElementById("statusText");
+
+    const CAMPAIGN_ID = "bturtle_kids_v1"; // 之後你改產品版本才需要改這個
 
     function toLocalDateOnly(d) {
       return new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -82,152 +103,143 @@
       const ms = 24 * 60 * 60 * 1000;
       return Math.round((toLocalDateOnly(b) - toLocalDateOnly(a)) / ms);
     }
+    function fmtDate(d) {
+      return d.toLocaleDateString("zh-Hant", { year:"numeric", month:"2-digit", day:"2-digit" });
+    }
+
+    function keyUserStart() { return `${CAMPAIGN_ID}_userStartDate`; }
+    function keyDone(dayNum) { return `${CAMPAIGN_ID}_done_day_${dayNum}`; }
+
+    function getOrCreateUserStartDate() {
+      const saved = localStorage.getItem(keyUserStart());
+      if (saved) return new Date(saved);
+
+      // 第一次打開：把今天存起來 => 這個家長的 Day1
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      localStorage.setItem(keyUserStart(), start.toISOString());
+      return start;
+    }
 
     async function loadData() {
-      // 相對路徑，適用 GitHub Pages 子路徑 /bturtle-kids/
       const url = "./data.json?ts=" + Date.now();
       const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error("讀取 data.json 失敗（HTTP " + res.status + "）。");
-      const text = await res.text();
-
-      // 防呆：如果拿到 HTML，直接提示你
-      if (text.trim().startsWith("<")) {
-        throw new Error("data.json 不是 JSON（看起來是 HTML）。請確認檔案名稱與內容。");
-      }
-
-      let json;
-      try {
-        json = JSON.parse(text);
-      } catch (e) {
-        throw new Error("data.json JSON 格式錯誤：請確認逗號/引號是否正確。");
-      }
-      return json;
+      if (!res.ok) throw new Error("讀取 data.json 失敗：" + res.status);
+      return await res.json();
     }
 
-    function validateData(data) {
-      const missing = [];
-      if (!data) missing.push("data");
-      if (!data.mode) missing.push("mode");
-      if (!data.startDate) missing.push("startDate");
-      if (!Array.isArray(data.days)) missing.push("days(array)");
-
-      if (missing.length) {
-        throw new Error("data.json 缺少欄位：" + missing.join(", "));
-      }
-
-      // days schema check
-      const bad = [];
-      for (const d of data.days) {
-        if (typeof d.day !== "number") bad.push("day 必須是 number");
-        if (!d.choiceA || !d.choiceA.title) bad.push("choiceA.title 缺少（Day " + d.day + "）");
-        if (!d.choiceB || !d.choiceB.title) bad.push("choiceB.title 缺少（Day " + d.day + "）");
-        if (!d.reward || !d.reward.img) bad.push("reward.img 缺少（Day " + d.day + "）");
-      }
-      if (bad.length) {
-        throw new Error("data.json 結構不完整：\n- " + bad.slice(0,6).join("\n- ") + (bad.length>6 ? "\n（還有更多…）" : ""));
-      }
-    }
-
-    // Rolling Mode：以「家長第一次打開的日期」作為 Day1 起點
-    function getRollingDayNum(startDateStr) {
-      const start = new Date(startDateStr);
-      if (isNaN(start.getTime())) throw new Error("startDate 格式不正確，請用 YYYY-MM-DD。");
-
-      const key = "bturtle_first_open_date";
-      let first = localStorage.getItem(key);
-
-      if (!first) {
-        // 第一次打開：記錄今天
-        const today = new Date();
-        const todayISO = toLocalDateOnly(today).toISOString().slice(0,10);
-        localStorage.setItem(key, todayISO);
-        first = todayISO;
-      }
-
-      const firstDate = new Date(first);
+    function getDayNumForThisUser(userStartDate) {
       const today = new Date();
-      const diff = daysBetween(firstDate, today);
+      const diff = daysBetween(userStartDate, today);
       return Math.max(1, diff + 1);
     }
 
-    function storageKey(dayNum) {
-      return "bturtle_done_day_" + dayNum;
-    }
-
-    function listAvailableDays(data) {
-      const arr = (data.days || []).map(d => d.day).sort((a,b)=>a-b);
-      return arr.length ? arr.join(", ") : "(none)";
+    function safeTitle(prefix, title) {
+      // 若 data.json 沒寫 A/B 前綴，就自動補上
+      if (!title) return prefix;
+      const t = String(title);
+      if (t.trim().startsWith("A") || t.trim().startsWith("B")) return t;
+      return `${prefix}${t}`;
     }
 
     function renderDay(data) {
-      // mode: rolling（固定使用）
-      const dayNum = getRollingDayNum(data.startDate);
+      const userStart = getOrCreateUserStartDate();
+      const dayNum = getDayNumForThisUser(userStart);
+
+      const totalDays = Array.isArray(data.days) ? data.days.length : 0;
 
       document.getElementById("dayPill").textContent = "Day " + dayNum;
       document.getElementById("dateText").textContent =
-        "模式：Rolling（第一次打開算 Day1）｜今日：" + new Date().toLocaleDateString("zh-Hant");
+        `你的起跑日：${fmtDate(userStart)} ｜ 今天：${fmtDate(new Date())} ｜ 內容天數：${totalDays} 天`;
+
+      // 超出內容天數：顯示完成頁
+      if (!totalDays || dayNum > totalDays) {
+        document.getElementById("choicesRow").style.display = "none";
+        document.getElementById("rewardBox").style.display = "block";
+        document.getElementById("rewardTitle").textContent = "✅ 已完成這一組";
+        document.getElementById("rewardImg").src = "https://placehold.co/800x450?text=Completed";
+        document.getElementById("doneHint").textContent =
+          "你已走完這套內容。之後若購買下一組（新主題/新月份），換新的 data.json 就會繼續。";
+        statusText.textContent = "（已完成）";
+        return;
+      }
 
       const dayObj = (data.days || []).find(d => Number(d.day) === Number(dayNum));
       if (!dayObj) {
         document.getElementById("choicesRow").style.display = "none";
         document.getElementById("rewardBox").style.display = "none";
-        errEl.textContent =
-          "目前沒有 Day " + dayNum + " 的內容。你目前 data.json 有的 days： " + listAvailableDays(data) +
-          "。請把 data.json 補到 Day " + dayNum + "（或以上）。";
-        debugEl.textContent = "";
+        errEl.textContent = `找不到 Day ${dayNum} 的資料。請確認 data.json 的 days 裡有 day=${dayNum}。`;
+        statusText.textContent = "";
         return;
       }
 
-      // 已完成就直接顯示 reward
-      const done = localStorage.getItem(storageKey(dayNum));
+      // 若今日已完成：直接顯示 reward
+      const done = localStorage.getItem(keyDone(dayNum));
       if (done === "A" || done === "B") {
         showReward(dayObj, done);
-        debugEl.textContent = "（已完成：選了 " + done + "）";
+        statusText.textContent = `（今天已完成：選了 ${done}）`;
         return;
       }
 
       // 顯示選項
       document.getElementById("choicesRow").style.display = "flex";
       document.getElementById("rewardBox").style.display = "none";
+      errEl.textContent = "";
 
-      document.getElementById("aTitle").textContent = dayObj.choiceA.title;
-      document.getElementById("aBody").textContent  = dayObj.choiceA.body || "";
+      const aT = dayObj.choiceA?.title || "A";
+      const bT = dayObj.choiceB?.title || "B";
 
-      document.getElementById("bTitle").textContent = dayObj.choiceB.title;
-      document.getElementById("bBody").textContent  = dayObj.choiceB.body || "";
+      document.getElementById("aTitle").textContent = safeTitle("A：", aT);
+      document.getElementById("aBody").textContent  = dayObj.choiceA?.body  || "";
+
+      document.getElementById("bTitle").textContent = safeTitle("B：", bT);
+      document.getElementById("bBody").textContent  = dayObj.choiceB?.body  || "";
 
       document.getElementById("btnA").onclick = () => {
-        localStorage.setItem(storageKey(dayNum), "A");
+        localStorage.setItem(keyDone(dayNum), "A");
         showReward(dayObj, "A");
+        statusText.textContent = "（今天已完成：選了 A）";
       };
       document.getElementById("btnB").onclick = () => {
-        localStorage.setItem(storageKey(dayNum), "B");
+        localStorage.setItem(keyDone(dayNum), "B");
         showReward(dayObj, "B");
+        statusText.textContent = "（今天已完成：選了 B）";
       };
 
-      debugEl.textContent = "";
+      statusText.textContent = "（今天尚未完成）";
     }
 
     function showReward(dayObj, choice) {
       document.getElementById("choicesRow").style.display = "none";
       const reward = dayObj.reward || {};
+
       document.getElementById("rewardTitle").textContent =
-        reward.title ? reward.title : ("已完成（選了 " + choice + "）");
+        reward.title ? reward.title : (`已完成（選了 ${choice}）`);
+
+      // 先用穩定的 placeholder，避免你還沒上傳圖就壞掉
       document.getElementById("rewardImg").src =
         reward.img ? reward.img : "https://placehold.co/800x450?text=Reward";
+
       document.getElementById("rewardBox").style.display = "block";
+      document.getElementById("doneHint").textContent =
+        "✅ 這台裝置已記錄完成。明天再打開會自動到下一天。";
     }
+
+    function resetThisDevice() {
+      // 清除：起跑日 + 所有完成紀錄
+      localStorage.removeItem(keyUserStart());
+      for (let i = 1; i <= 365; i++) localStorage.removeItem(keyDone(i));
+      location.reload();
+    }
+
+    document.getElementById("resetBtn").onclick = () => {
+      const ok = confirm("確定要重置這台裝置的進度嗎？（不會影響別人的進度）");
+      if (ok) resetThisDevice();
+    };
 
     (async () => {
       try {
         const data = await loadData();
-        validateData(data);
-
-        // 強制使用 rolling
-        if (data.mode !== "rolling") {
-          throw new Error("data.json 的 mode 必須是 \"rolling\"。");
-        }
-
         renderDay(data);
       } catch (e) {
         errEl.textContent = String(e);
